@@ -1,25 +1,44 @@
 import ast
+import sys
 import unittest
 
-from flake8_super_call import Checker
+from flake8_super_call import DunderClassSuperChecker, ModernizeSuperChecker
 
 
-def check(should_fail=False):
-    super_class = 'self.__class__' if should_fail else 'ClassName'
-    tree = ast.parse('super({}, self)'.format(super_class))
-    return next(Checker(tree).run(), None)
+def check(checker_class, super_class_call):
+    tree = ast.parse(super_class_call)
+    return next(checker_class(tree).run(), None)
 
 
-class TestChecker(unittest.TestCase):
+class TestDunderClassSuperChecker(unittest.TestCase):
 
     def test_bad_super_call(self):
-        lineno, offset, message, _ = check(should_fail=True)
+        lineno, offset, message, _ = check(
+            DunderClassSuperChecker, 'super(self.__class__, self)'
+        )
         self.assertEqual(lineno, 1)
         self.assertEqual(offset, 0)
         self.assertTrue(message.startswith('S777'))
 
     def test_good_super_call(self):
-        self.assertIsNone(check())
+        self.assertIsNone(
+            check(DunderClassSuperChecker, 'super(ClassName, self)')
+        )
+
+
+@unittest.skipIf(sys.version_info[0] < 3, 'Python 3 only check')
+class TestModernizeSuperChecker(unittest.TestCase):
+
+    def test_bad_super_call(self):
+        lineno, offset, message, _ = check(
+            ModernizeSuperChecker, 'super(ClassName, self)'
+        )
+        self.assertEqual(lineno, 1)
+        self.assertEqual(offset, 0)
+        self.assertTrue(message.startswith('S778'))
+
+    def test_good_super_call(self):
+        self.assertIsNone(check(ModernizeSuperChecker, 'super()'))
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@
 """
 
 import ast
+import sys
 
 __version__ = '1.0.0'
 
@@ -16,7 +17,7 @@ def _are_super_arguments_bad(args):
             and args[0].attr == '__class__')
 
 
-class Checker(ast.NodeVisitor):
+class DunderClassSuperChecker(ast.NodeVisitor):
     name = 'flake8_super_call'
     version = __version__
 
@@ -39,3 +40,23 @@ class Checker(ast.NodeVisitor):
         self.visit(self.tree)
         for lineno, col_offset, message, ctype in self.errors:
             yield lineno, col_offset, message, ctype
+
+
+class ModernizeSuperChecker(DunderClassSuperChecker):
+
+    message = 'S778 super() called with arguments in  Python 3'
+
+    def visit_Call(self, node):
+        self.generic_visit(node)
+        if _is_super_function_call(node):
+            if self._can_modernize_super_args(node.args):
+                self.errors.append(
+                    (node.lineno, node.col_offset, self.message, type(self))
+                )
+
+    @staticmethod
+    def _can_modernize_super_args(args):
+        return (
+            sys.version_info[0] > 2
+            and len(args) == 2
+        )
