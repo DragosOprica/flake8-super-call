@@ -16,7 +16,7 @@ def _are_super_arguments_bad(args):
             and args[0].attr == '__class__')
 
 
-class Checker(ast.NodeVisitor):
+class DunderClassSuperChecker(ast.NodeVisitor):
     name = 'flake8_super_call'
     version = __version__
 

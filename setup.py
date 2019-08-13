@@ -25,7 +25,10 @@ setup(
     keywords='flake8 super',
     url=url,
     download_url=url + '/tarball/' + version,
-    entry_points={'flake8.extension': ['S777 = flake8_super_call:Checker']},
+    entry_points={'flake8.extension': [
+            'S777 = flake8_super_call:DunderClassSuperChecker'
+        ]
+    },
     py_modules=['flake8_super_call'],
     install_requires=['flake8>=3.0.0'],
     tests_require=['flake8>=3.0.0'],
